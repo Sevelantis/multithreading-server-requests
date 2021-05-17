@@ -5,9 +5,11 @@
             "includePath": [
                 "${workspaceFolder}/**"
                 // "${workspaceFolder}/request/**"
+                ,
+                "/usr/include/c++/9"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/gcc",
+            "compilerPath": "/usr/bin/g++",
             "cStandard": "gnu17",
             "cppStandard": "gnu++14",
             "compilerArgs": [

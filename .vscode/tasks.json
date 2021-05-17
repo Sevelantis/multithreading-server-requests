@@ -8,8 +8,8 @@
 			"args": [													
 				"-g",		
 				"${file}",
-				// "${fileDirname}/fork/Fork.cpp",					// +Fork.cpp
-				// "${fileDirname}/philosopher/Philosopher.cpp",	// +Philosopher.cpp
+				"${fileDirname}/request/Request.cpp",
+				"${fileDirname}/resource/Resource.cpp",
 				"-o",
 				"${fileDirname}/${fileBasenameNoExtension}",					
 				"-Wall",										// print warnings

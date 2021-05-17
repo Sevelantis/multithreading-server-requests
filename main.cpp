@@ -4,24 +4,36 @@
 #include <chrono>
 #include <string>
 
+#include "request/Request.h"
+#include "resource/Resource.h"
+
 using namespace std;
 
 // functions' definitions
 void initNcurses();
 void checkExit(bool &);
-void updateScreen(bool &);
+void updateScreen(bool &, vector<Resource*>&);
 
 // variables
-int N = 5;
+int reqNum = 5;
+int resNum = 5;
 
 int main()
 {
     initNcurses();
 
-    // TODO create threads 
+    // create vector pointer objects
+    vector<Request*> requests(reqNum);
+    vector<Resource*> resources(resNum);
+
+    // create objects
+    for (int i = 0; i < reqNum; i++)    requests[i] = new Request();
+    for (int i = 0; i < resNum; i++)    resources[i] = new Resource();
+
+    // create main threads 
     bool running = true;
     std::thread threadExit(checkExit, std::ref(running));
-    std::thread threadScreen(updateScreen, std::ref(running));
+    std::thread threadScreen(updateScreen, ref(running), ref(resources));
     
     // TODO run threads
 
@@ -35,21 +47,20 @@ int main()
     endwin();
 }
 
-void updateScreen(bool &running)
+void updateScreen(bool &running, vector<Resource*>& pRes)
 {
     while(running)
     {
         clear();
-        int rows = 4;
-        int cols = 4;
         // display headers
 
-        for (int i = 0; i < N; i++,rows+=4)
+        for (int i = 0; i < resNum; i++)
         {
             int color = 2;
             attron(COLOR_PAIR(color));
             //display
-            mvprintw(rows, cols, "%s", "test");
+            pRes[i]->draw();
+            // mvprintw(rows, cols, "%s", pRes[i]->getDrawing().c_str());
             attroff(COLOR_PAIR(color));
         }
 
