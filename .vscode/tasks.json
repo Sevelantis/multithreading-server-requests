@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: g++ build active file",
+			"command": "/usr/bin/g++",
+			"args": [													
+				"-g",		
+				"${file}",
+				// "${fileDirname}/fork/Fork.cpp",					// +Fork.cpp
+				// "${fileDirname}/philosopher/Philosopher.cpp",	// +Philosopher.cpp
+				"-o",
+				"${fileDirname}/${fileBasenameNoExtension}",					
+				"-Wall",										// print warnings
+				"-pthread",										// handle threads
+				"-lncurses"										// handle ncurses
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "compiler: /usr/bin/g++"
+		}
+	]
+}
