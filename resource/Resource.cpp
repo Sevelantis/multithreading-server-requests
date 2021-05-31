@@ -2,16 +2,16 @@
 
 int Resource::idCntr = 0;
 
-void Resource::draw()
+void Resource::draw(int borderColor, int idColor)
 {
-    rect.draw();
+    rect.draw(id, -1, borderColor, idColor, state);
 }
 
 Resource::Resource()
 {
     this->id=idCntr++;
-    rect = Rectangle(Rectangle::X_START, 
-            Rectangle::Y_START + (Rectangle::HEIGHT + Rectangle::Y_SPACE) * id);
+    this->state = HALF;
+    rect = Rectangle(Rectangle::X_START, Rectangle::Y_START + (Rectangle::HEIGHT + Rectangle::Y_SPACE) * id);
 }
 
 Resource::~Resource()

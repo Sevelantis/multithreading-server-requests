@@ -3,6 +3,7 @@
 #include <vector>
 #include <chrono>
 #include <string>
+#include <mutex>
 
 #include "request/Request.h"
 #include "resource/Resource.h"
@@ -27,8 +28,8 @@ int main()
     vector<Resource*> resources(resNum);
 
     // create objects
-    for (int i = 0; i < reqNum; i++)    requests[i] = new Request();
     for (int i = 0; i < resNum; i++)    resources[i] = new Resource();
+    for (int i = 0; i < reqNum; i++)    requests[i] = new Request();
 
     // create main threads 
     bool running = true;
@@ -41,38 +42,43 @@ int main()
     threadExit.join();
     threadScreen.join();
 
-    // TODO clear memory
+    // clear memory
+    for (int i = 0; i < reqNum; i++)    delete requests[i];
+    for (int i = 0; i < resNum; i++)    delete resources[i];
     
     // quit ncurses
     endwin();
 }
-
+std::mutex screen_mtx;
 void updateScreen(bool &running, vector<Resource*>& pRes)
 {
     while(running)
     {
-        clear();
-        // display headers
-
+        // screen_mtx.lock();
         for (int i = 0; i < resNum; i++)
         {
-            int color = 2;
-            attron(COLOR_PAIR(color));
-            //display
-            pRes[i]->draw();
-            // mvprintw(rows, cols, "%s", pRes[i]->getDrawing().c_str());
-            attroff(COLOR_PAIR(color));
+            int borderColor = 2;
+            int idColor = 1;
+            pRes[i]->draw(borderColor, idColor);
         }
-
         refresh();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        clear();
+        // screen_mtx.unlock();
     }
+    clear();
 }
 
 void checkExit(bool &running)
 {
-    while (getch() != 'q');
-
+    bool isExit = false;
+    while(!isExit)
+    {
+        // screen_mtx.lock();
+        if(getch() == 'q')
+            isExit = true;
+        // screen_mtx.unlock();
+    }
     running = false;
 }
 
@@ -86,4 +92,11 @@ void initNcurses()
     init_pair(2, COLOR_RED, COLOR_BLACK);
     init_pair(3, COLOR_GREEN, COLOR_BLACK);
     init_pair(4, COLOR_MAGENTA, COLOR_BLACK);
+
+    init_pair(5, COLOR_BLACK, COLOR_BLUE);
+    init_pair(6, COLOR_BLACK, COLOR_GREEN);
+    init_pair(7, COLOR_BLACK, COLOR_RED);
+    init_pair(8, COLOR_BLACK, COLOR_YELLOW);
+    init_pair(9, COLOR_BLACK, COLOR_CYAN);
+    init_pair(10, COLOR_BLACK, COLOR_WHITE);
 }
