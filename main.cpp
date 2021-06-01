@@ -4,9 +4,9 @@
 #include <chrono>
 #include <string>
 #include <mutex>
-
-#include "request/Request.h"
 #include "resource/Resource.h"
+#include "request/Request.h"
+#include "server/Server.h"
 
 using namespace std;
 
@@ -16,25 +16,18 @@ void checkExit(bool &);
 void updateScreen(bool &, vector<Resource*>&);
 
 // variables
-int reqNum = 5;
 int resNum = 5;
 
 int main()
 {
     initNcurses();
 
-    // create vector pointer objects
-    vector<Request*> requests(reqNum);
-    vector<Resource*> resources(resNum);
-
-    // create objects
-    for (int i = 0; i < resNum; i++)    resources[i] = new Resource();
-    for (int i = 0; i < reqNum; i++)    requests[i] = new Request();
+    Server *server = new Server(resNum);
 
     // create main threads 
     bool running = true;
     std::thread threadExit(checkExit, std::ref(running));
-    std::thread threadScreen(updateScreen, ref(running), ref(resources));
+    std::thread threadScreen(updateScreen, ref(running), ref(server->getResources()));
     
     // TODO run threads
 
@@ -43,8 +36,7 @@ int main()
     threadScreen.join();
 
     // clear memory
-    for (int i = 0; i < reqNum; i++)    delete requests[i];
-    for (int i = 0; i < resNum; i++)    delete resources[i];
+    // TODO    
     
     // quit ncurses
     endwin();
@@ -57,9 +49,7 @@ void updateScreen(bool &running, vector<Resource*>& pRes)
         // screen_mtx.lock();
         for (int i = 0; i < resNum; i++)
         {
-            int borderColor = 2;
-            int idColor = 1;
-            pRes[i]->draw(borderColor, idColor);
+            pRes[i]->draw();
         }
         refresh();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
