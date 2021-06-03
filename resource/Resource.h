@@ -1,15 +1,14 @@
 #ifndef P2_RESOURCE_H
 #define P2_RESOURCE_H
 
-#define NONE     1
-#define HALF     2
-#define HALF2    3
-#define FULL     4
-
 #include <string>
 #include <vector>
+#include <random>
+#include <mutex>
 #include "../rectangle/Rectangle.h"
 #include "../request/Request.h"
+
+class Request;
 
 class Resource
 {
@@ -17,20 +16,27 @@ public:
     Resource();
     ~Resource();
     void draw();
-
-    int getState();
+public:
+    void setState(int state);
+    void addRequest(Request *pReq, int newState);
+    void removeRequest(Request *pReq, int demand);
+public:
+    void lock();
+    void unlock();
+public:
     int getId();
+    int getState();
     std::vector<Request*>& getRequests();
-
-    void addRequest(Request *req);
-    void removeRequest(Request *req); // may be private
-
+    
 private:
     static int idCntr;
     int state;
     int id;
-    Rectangle rect;
+private:
     std::vector<Request*> requests;
+private:
+    Rectangle rect;
+    std::mutex mtx;
 };
 
 #endif //P2_RESOURCE_H

@@ -4,16 +4,15 @@
 #include <chrono>
 #include <string>
 #include <mutex>
-#include "resource/Resource.h"
-#include "request/Request.h"
 #include "server/Server.h"
 
 using namespace std;
 
 // functions' definitions
 void initNcurses();
+void initRandomGenerator();
 void checkExit(bool &);
-void updateScreen(bool &, vector<Resource*>&);
+void updateScreen(bool &, vector<Resource*>&, vector<Request*>&);
 
 // variables
 int resNum = 5;
@@ -21,15 +20,24 @@ int resNum = 5;
 int main()
 {
     initNcurses();
+    initRandomGenerator();
 
     Server *server = new Server(resNum);
+    server->start();
 
     // create main threads 
     bool running = true;
     std::thread threadExit(checkExit, std::ref(running));
-    std::thread threadScreen(updateScreen, ref(running), ref(server->getResources()));
+    std::thread threadScreen(updateScreen, ref(running), ref(server->getResources()), ref(server->getRequests()));
+    //
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     
-    // TODO run threads
+    server->spawnRequest();
+    server->spawnRequest();
+    server->spawnRequest();
+    server->spawnRequest();
+    server->spawnRequest();
+    server->spawnRequest();
 
     // join threads
     threadExit.join();
@@ -41,20 +49,44 @@ int main()
     // quit ncurses
     endwin();
 }
-std::mutex screen_mtx;
-void updateScreen(bool &running, vector<Resource*>& pRes)
+
+void updateScreen(bool &running, vector<Resource*>& pRes, vector<Request*>& pReq)
 {
     while(running)
-    {
-        // screen_mtx.lock();
+    {   
+        // print requests header
+        attron(COLOR_PAIR(GREEN_BLACK));
+        mvprintw(Rectangle::Y_HEADER, Rectangle::X_HEADER, "Request[id]");
+        mvprintw(Rectangle::Y_HEADER, Rectangle::X_HEADER_1, "Resource_1[id][%]");
+        mvprintw(Rectangle::Y_HEADER, Rectangle::X_HEADER_2, "Resource_2[id][%]");
+        mvprintw(Rectangle::Y_HEADER, Rectangle::X_HEADER_3, "Resource_3[id][%]");
+        mvprintw(Rectangle::Y_HEADER, Rectangle::X_HEADER_4, "TimeTotal[ms]");
+        attroff(COLOR_PAIR(GREEN_BLACK));attron(COLOR_PAIR(MAGENTA_BLACK));        
+        mvprintw(Rectangle::Y_HEADER+1, Rectangle::X_HEADER, "_________________");
+        mvprintw(Rectangle::Y_HEADER+1, Rectangle::X_HEADER_1, "_________________");
+        mvprintw(Rectangle::Y_HEADER+1, Rectangle::X_HEADER_2, "_________________");
+        mvprintw(Rectangle::Y_HEADER+1, Rectangle::X_HEADER_3, "_________________");
+        mvprintw(Rectangle::Y_HEADER+1, Rectangle::X_HEADER_4, "_________________");
+        attroff(COLOR_PAIR(MAGENTA_BLACK));
+
+        // print resources rectangles
         for (int i = 0; i < resNum; i++)
         {
+            pRes[i]->lock();
             pRes[i]->draw();
+            pRes[i]->unlock();
         }
+
+        for (int i = 0; i < (int)pReq.size(); i++)
+        {
+            pReq[i]->lock();
+            pReq[i]->draw(i);
+            pReq[i]->unlock();
+        }
+        
         refresh();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         clear();
-        // screen_mtx.unlock();
     }
     clear();
 }
@@ -64,10 +96,8 @@ void checkExit(bool &running)
     bool isExit = false;
     while(!isExit)
     {
-        // screen_mtx.lock();
         if(getch() == 'q')
             isExit = true;
-        // screen_mtx.unlock();
     }
     running = false;
 }
@@ -77,16 +107,22 @@ void initNcurses()
     initscr();
     noecho();
     start_color();
-    init_pair(0, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(1, COLOR_BLUE, COLOR_BLACK);
-    init_pair(2, COLOR_RED, COLOR_BLACK);
-    init_pair(3, COLOR_GREEN, COLOR_BLACK);
-    init_pair(4, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(YELLOW_WHITE, COLOR_YELLOW, COLOR_WHITE);
+    init_pair(BLUE_BLACK, COLOR_BLUE, COLOR_BLACK);
+    init_pair(RED_BLACK, COLOR_RED, COLOR_BLACK);
+    init_pair(GREEN_BLACK, COLOR_BLACK, COLOR_RED);
+    init_pair(MAGENTA_BLACK, COLOR_MAGENTA, COLOR_BLACK);
 
-    init_pair(5, COLOR_BLACK, COLOR_BLUE);
-    init_pair(6, COLOR_BLACK, COLOR_GREEN);
-    init_pair(7, COLOR_BLACK, COLOR_RED);
-    init_pair(8, COLOR_BLACK, COLOR_YELLOW);
-    init_pair(9, COLOR_BLACK, COLOR_CYAN);
-    init_pair(10, COLOR_BLACK, COLOR_WHITE);
+    init_pair(BLACK_BLUE, COLOR_BLACK, COLOR_BLUE);
+    init_pair(BLACK_GREEN, COLOR_BLACK, COLOR_GREEN);
+    init_pair(BLACK_RED, COLOR_BLACK, COLOR_RED);
+    init_pair(BLACK_YELLOW, COLOR_BLACK, COLOR_YELLOW);
+    init_pair(BLACK_CYAN, COLOR_BLACK, COLOR_CYAN);
+    init_pair(BLACK_WHITE, COLOR_BLACK, COLOR_WHITE);
+    init_pair(BLACK_MAGENTA, COLOR_BLACK, COLOR_MAGENTA);
+}
+
+void initRandomGenerator()
+{
+    srand(time(NULL));
 }

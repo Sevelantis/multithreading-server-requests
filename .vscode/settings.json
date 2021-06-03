@@ -51,6 +51,9 @@
         "thread": "cpp",
         "typeinfo": "cpp",
         "ncurses.h": "c",
-        "request.h": "c"
+        "request.h": "c",
+        "randomgenerator.h": "c",
+        "colors.h": "c",
+        "constants.h": "c"
     }
 }

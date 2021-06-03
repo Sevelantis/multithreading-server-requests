@@ -1,9 +1,11 @@
 #include "Server.h"
+#include <algorithm>
+#include "../randomGenerator/RandomGenerator.h"
 
 using namespace std;
 
 /*
-*   request generator
+*   request generator thread run
 */
 void Server::run()
 {
@@ -12,8 +14,69 @@ void Server::run()
         if(isRequestSpawnReady())
             spawnRequest();
 
+        // check if a request finished
+        checkIfRequestFinished();
+
         std::this_thread::sleep_for(std::chrono::microseconds(clockRate));
     }
+}
+
+/*
+*   create new request
+*/
+void Server::spawnRequest()
+{
+    /* 
+    * requests need different resources
+    * first: resources
+    * second: demand for resource {50% | 100%}->{HALF | FULL}
+    */
+    std::vector<std::pair<Resource*,int>> tasks;
+    
+    // how long those resources are needed? (1000-5000) [ms]
+    int time = RandomGenerator::randInt(1000, 5000);
+
+    // how many resources are needed?
+    // {(1->50%), (2->30%), (3->20%)}
+    int resourceDemandNum = RandomGenerator::randNumOfResources(.6, .25, .15);
+
+    // which resources are needed?
+    vector<int> resIds(resourceDemandNum, -1);
+    for (int i = 0; i < resourceDemandNum; i++)
+    {
+        // get random resources' id's, but dont repeat them
+        int id = RandomGenerator::randInt(0, resNum); // <0, resNum-1>
+        while(std::find(resIds.begin(), resIds.end(), id) != resIds.end())
+        {   // id repeats, search new
+            id = RandomGenerator::randInt(0, resNum); // <0, resNum-1>
+        }
+        resIds[i] = id;
+
+        // does the request need 50% of resource, or 100%? {50% | 100%}->{HALF | FULL}
+        // probabilties: {{HALF -> 25%}, {FULL -> 75%}}
+        int halfOrFull = RandomGenerator::randHalfOrFull(.25, .75);
+
+        // add resource to request 
+        tasks.push_back(std::make_pair(resources[id], halfOrFull));
+    }
+
+    Request *req = new Request(time, tasks);
+    requests.push_back(req);
+
+    Rectangle::Y_HEADER_VALUES+=2;
+}
+
+Server::Server(int resNum)
+{
+    this->resNum = resNum;
+    createResources();
+}
+
+void Server::removeRequest(Request *pReq)
+{
+    pReq->kill();
+    requests.erase(std::remove(requests.begin(), requests.end(), pReq), requests.end());
+    Rectangle::Y_HEADER_VALUES-=2;
 }
 
 void Server::start()
@@ -37,31 +100,32 @@ bool Server::isRequestSpawnReady()
     return false;
 }
 
-/*
-*   create new request
-*/
-void Server::spawnRequest()
-{
-    // spawn random request:
-    //  - 1s-5s
-    //  - 1-3 zasoby (50 lub 100%)
-}
-
-Server::Server(int resNum)
-{
-    this->resNum = resNum;
-
-    createResources();
-}
-
 std::vector<Resource*>& Server::getResources()
 {
     return resources;
 }
 
+std::vector<Request*>& Server::getRequests()
+{
+    return requests;
+}
+
+void Server::checkIfRequestFinished()
+{
+    for(auto req : requests)
+    {
+        if(req->isFinished())
+        {
+            removeRequest(req);
+            break;
+        }
+    }
+}
+
 void Server::kill()
 {
-
+    this->running = false;
+    thr.join();
 }
 
 Server::~Server()

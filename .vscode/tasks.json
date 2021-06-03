@@ -12,6 +12,7 @@
 				"${fileDirname}/request/Request.cpp",
 				"${fileDirname}/resource/Resource.cpp",
 				"${fileDirname}/server/Server.cpp",
+				"${fileDirname}/randomGenerator/RandomGenerator.h",
 				"-o",
 				"${fileDirname}/${fileBasenameNoExtension}",					
 				"-Wall",										// print warnings

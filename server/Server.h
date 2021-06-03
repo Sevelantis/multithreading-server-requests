@@ -1,12 +1,9 @@
 #ifndef P2_SERVER_H
 #define P2_SERVER_H
 
-#define CLOCK_RATE 30000
-
 #include <vector>
 #include <thread>
-#include "../request/Request.h"
-#include "../resource/Resource.h"
+#include "../request/Request.h" // includes Resource.h
 
 class Server
 {
@@ -16,9 +13,9 @@ public:
     
     void start();
     void kill();
-
     void spawnRequest();
     std::vector<Resource*>& getResources();
+    std::vector<Request*>& getRequests();
 
 private:
     bool running=true;
@@ -29,11 +26,14 @@ private:
 private:
     int clockRate=CLOCK_RATE;
     int requestSpawnTime=0;
-    int requestSpawnTimeMax=200;
+    int requestSpawnTimeMax=222;
 private:
     void run();
     void createResources();
     bool isRequestSpawnReady();
+private:
+    void removeRequest(Request *pReq);
+    void checkIfRequestFinished();
 };
 
 

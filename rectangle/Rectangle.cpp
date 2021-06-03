@@ -1,40 +1,49 @@
 #include "Rectangle.h"
 #include <ncurses.h>
 #include <string>
+#include "../constants/Constants.h"
 #include "../resource/Resource.h"
-
-#define COLOR_ID_RESOURCE   1
-#define COLOR_BORDER        2  
 
 int Rectangle::WIDTH = 11;
 int Rectangle::HEIGHT = 5;
 int Rectangle::X_START = 10;
 int Rectangle::Y_START = 1;
-int Rectangle::Y_SPACE = 7;
+int Rectangle::Y_SPACE = 4;
+int Rectangle::Y_HEADER = Y_START;
+int Rectangle::Y_HEADER_VALUES = Y_START + 1;
 
-int x1;
-int y1;
-int x2;
-int y2;
+// header xs and ys
+int Rectangle::X_HEADER_OFFSET = 22;
+int Rectangle::X_HEADER = X_START + WIDTH + 3;
+int Rectangle::X_HEADER_1 = X_HEADER + X_HEADER_OFFSET*1;
+int Rectangle::X_HEADER_2 = X_HEADER + X_HEADER_OFFSET*2;
+int Rectangle::X_HEADER_3 = X_HEADER + X_HEADER_OFFSET*3;
+int Rectangle::X_HEADER_4 = X_HEADER + X_HEADER_OFFSET*4;
+
+int x_1;
+int y_1;
+int x_2;
+int y_2;
+
 
 Rectangle::Rectangle(int x1, int y1)
 {
-    this->x1 = x1;
-    this->y1 = y1;
-    this->x2 = x1 + WIDTH;
-    this->y2 = y1 + HEIGHT;
+    this->x_1 = x1;
+    this->y_1 = y1;
+    this->x_2 = x1 + WIDTH;
+    this->y_2 = y1 + HEIGHT;
 }
 
 void Rectangle::draw(Resource *pRes)
 {
     // fill rectangle with color if it is being used
-    if(pRes->getState() != NONE)   drawRectIfState(pRes);
+    if(pRes->getState() != NONE)   drawRequestOnState(pRes);
 
     //print rectangle border
-    drawRectBorder(x1, y1, x2, y2);
+    drawRectBorder(x_1, y_1, x_2, y_2);
 
     //print id
-    drawRectId(y1, x2, pRes->getId());
+    drawResourceId(y_1, x_2, pRes->getId());
 }
 
 void Rectangle::drawRectBorder(int x1, int y1, int x2, int y2)
@@ -51,43 +60,70 @@ void Rectangle::drawRectBorder(int x1, int y1, int x2, int y2)
     attroff(COLOR_PAIR(COLOR_BORDER));
 }
 
-void Rectangle::drawRectId(int x, int y, int id)
+void Rectangle::drawResourceId(int x, int y, int id)
 {
     attron(COLOR_PAIR(COLOR_ID_RESOURCE));
-    mvprintw(y1, x2, std::to_string(id).c_str());
+    mvprintw(x, y, std::to_string(id).c_str());
     attroff(COLOR_PAIR(COLOR_ID_RESOURCE));
 }
 
-void Rectangle::drawRectIfState(Resource *pRes)
+void Rectangle::drawRequestOnState(Resource *pRes)
 {
     int state = pRes->getState();
-    int idRequest = -1;
-    
-    if(state == HALF)
-    {
-        int c = 5;
-        attron(COLOR_PAIR(c));
-        drawRectRequest(this->x1, this->y1, x1 + WIDTH/2 + 1, y1 + HEIGHT + 1, idRequest);attroff(COLOR_PAIR(c)); // unset blue color
-    }
-    else if(state == HALF2)
-    {
-        int colorLeft = 6; // green
-        int colorRight = 7; // RED
+    std::vector<Request*>& requests = pRes->getRequests();
 
-        // left
-        attron(COLOR_PAIR(colorLeft));
-        drawRectRequest(this->x1, this->y1, x1 + WIDTH/2 + 1, y1 + HEIGHT + 1, idRequest);attroff(COLOR_PAIR(colorLeft));
-        // right
-        attron(COLOR_PAIR(colorRight));
-        drawRectRequest(x1 + WIDTH/2 + 1, this->y1, this->x2, y1 + HEIGHT + 1, idRequest);attroff(COLOR_PAIR(colorRight));
-    }
-    else if(state == FULL)
+    if(requests.size() > 2) // TOO MUCH REQUESTS
+        clear();
+
+    int it = 0;
+    for(auto req : requests)
     {
-        int c = 8; // yellow
+        int idRequest = req->getId();
+        int c = req->getColor();
+        
         attron(COLOR_PAIR(c));
-        drawRectRequest(this->x1, this->y1,this->x2+1, this->y2+1, idRequest);
+        if(state == HALF)
+        {
+            drawRectRequest(x_1, y_1, x_1 + WIDTH/2 + 1, y_1 + HEIGHT + 1, idRequest);
+        }
+        else if(state == HALF2)
+        {
+            if(it == 0) // left
+            { 
+                drawRectRequest(x_1, y_1, x_1 + WIDTH/2 + 1, y_1 + HEIGHT + 1, idRequest);
+            }
+            else if(it == 1) // right
+            {
+                drawRectRequest(x_1 + WIDTH/2 + 1, y_1, x_2, y_1 + HEIGHT + 1, idRequest);
+            }
+        }
+        else if(state == FULL)
+        {
+            drawRectRequest(x_1, y_1, x_2+1, y_2+1, idRequest);
+        }
         attroff(COLOR_PAIR(c));
+        
+        it++;
     }
+}
+
+void Rectangle::drawRequestInfo(Request *pReq, int i)
+{
+    auto info = pReq->getInfo();
+    int yRow = Y_HEADER+4+i*2;
+    int c = pReq->getColor();
+    attron(COLOR_PAIR(c));
+    mvprintw(yRow, X_HEADER, info[0].c_str());
+    mvprintw(yRow, X_HEADER_1, info[1].c_str());
+    mvprintw(yRow, X_HEADER_2, info[2].c_str());
+    mvprintw(yRow, X_HEADER_3, info[3].c_str());
+    mvprintw(yRow, X_HEADER_4, info[4].c_str());
+
+    // line under
+    mvprintw(yRow+1, X_HEADER_1, info[5].c_str());
+    mvprintw(yRow+1, X_HEADER_2, info[6].c_str());
+    mvprintw(yRow+1, X_HEADER_3, info[7].c_str());
+    attroff(COLOR_PAIR(c));
 }
 
 void Rectangle::drawRectRequest(int x1, int y1, int x2, int y2, int idRequest)
