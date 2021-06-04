@@ -29,6 +29,7 @@ int Resource::getState()
 
 int Resource::getId()
 {
+    // std::lock_guard<std::mutex> guard(mtx);
     return id;
 }
 
@@ -53,26 +54,15 @@ void Resource::addRequest(Request *pReq, int newState)
     this->requests.push_back(pReq);
 }
 
-void Resource::removeRequest(Request *pReq, int reqDemand)
+void Resource::removeRequest(Request *pReq, int reqState)
 {
     // update resource state
-    if(state == FULL && (reqDemand == FULL 
-        || (state == HALF && reqDemand == HALF)))
-    {
+    if((state == FULL && reqState == FULL)
+        || (state == HALF && reqState == HALF))
         setState(NONE);
-    }
-    else if(state == HALF2 && reqDemand == HALF)
-    {
+
+    else if(state == HALF2 && reqState == HALF)
         setState(HALF);
-    }
-    // CATCHING UNHANDLED ERRORS
-    else if(state == NONE 
-            || (state == FULL && reqDemand == HALF)
-            || (state == HALF2 && reqDemand == FULL)
-            || (state == HALF && reqDemand == FULL))
-    {
-        clear();
-    }
 
     // request no longer need the resource
     this->requests.erase(std::remove(requests.begin(), requests.end(), pReq), requests.end());

@@ -14,6 +14,12 @@ void Server::run()
         if(isRequestSpawnReady())
             spawnRequest();
 
+        if(isDropRandomRequest(.0024))
+            dropRandomRequest();
+        
+        else if(isDropAllRequests(.0003))
+            dropAllRequests();
+
         // check if a request finished
         checkIfRequestFinished();
 
@@ -34,11 +40,11 @@ void Server::spawnRequest()
     std::vector<std::pair<Resource*,int>> tasks;
     
     // how long those resources are needed? (1000-5000) [ms]
-    int time = RandomGenerator::randInt(1000, 5000);
+    int time = RandomGenerator::randInt(500, 2000);
 
     // how many resources are needed?
     // {(1->50%), (2->30%), (3->20%)}
-    int resourceDemandNum = RandomGenerator::randNumOfResources(.6, .25, .15);
+    int resourceDemandNum = RandomGenerator::randNumOfResources(.4, .4, .2);
 
     // which resources are needed?
     vector<int> resIds(resourceDemandNum, -1);
@@ -54,7 +60,7 @@ void Server::spawnRequest()
 
         // does the request need 50% of resource, or 100%? {50% | 100%}->{HALF | FULL}
         // probabilties: {{HALF -> 25%}, {FULL -> 75%}}
-        int halfOrFull = RandomGenerator::randHalfOrFull(.25, .75);
+        int halfOrFull = RandomGenerator::randHalfOrFull(.9, .1);
 
         // add resource to request 
         tasks.push_back(std::make_pair(resources[id], halfOrFull));
@@ -63,7 +69,7 @@ void Server::spawnRequest()
     Request *req = new Request(time, tasks);
     requests.push_back(req);
 
-    Rectangle::Y_HEADER_VALUES+=2;
+    Rectangle::Y_HEADER_VALUES+=4;
 }
 
 Server::Server(int resNum)
@@ -76,7 +82,7 @@ void Server::removeRequest(Request *pReq)
 {
     pReq->kill();
     requests.erase(std::remove(requests.begin(), requests.end(), pReq), requests.end());
-    Rectangle::Y_HEADER_VALUES-=2;
+    Rectangle::Y_HEADER_VALUES-=4;
 }
 
 void Server::start()
@@ -117,7 +123,7 @@ void Server::checkIfRequestFinished()
         if(req->isFinished())
         {
             removeRequest(req);
-            break;
+            return;
         }
     }
 }
@@ -131,4 +137,36 @@ void Server::kill()
 Server::~Server()
 {
     
+}
+
+bool Server::isDropRandomRequest(double prob)
+{
+    return RandomGenerator::isProbability(prob);
+}
+
+void Server::dropRandomRequest()
+{
+    int size = requests.size();
+    if(size == 0) return;
+
+    int randIdx = RandomGenerator::randInt(0, size);
+    requests[randIdx]->finishAllTasks();
+    checkIfRequestFinished();
+}
+
+bool Server::isDropAllRequests(double prob)
+{
+    return RandomGenerator::isProbability(prob);
+}
+
+void Server::dropAllRequests()
+{
+    int size = requests.size();
+    if(size == 0) return;
+
+    for(auto req : requests)
+    {
+        req->finishAllTasks();
+    }
+    requestSpawnTime=-250;
 }

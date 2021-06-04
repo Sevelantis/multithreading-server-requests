@@ -19,7 +19,7 @@ public:
 public:
     void setState(int state);
     void addRequest(Request *pReq, int newState);
-    void removeRequest(Request *pReq, int demand);
+    void removeRequest(Request *pReq, int state);
 public:
     void lock();
     void unlock();

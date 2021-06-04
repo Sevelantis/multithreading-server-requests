@@ -26,14 +26,22 @@ private:
 private:
     int clockRate=CLOCK_RATE;
     int requestSpawnTime=0;
-    int requestSpawnTimeMax=222;
+    int requestSpawnTimeMax=19;
 private:
     void run();
     void createResources();
     bool isRequestSpawnReady();
+    
+    bool isDropRandomRequest(double prob);
+    void dropRandomRequest();
+
+    bool isDropAllRequests(double prob);
+    void dropAllRequests();
+
 private:
     void removeRequest(Request *pReq);
     void checkIfRequestFinished();
+
 };
 
 

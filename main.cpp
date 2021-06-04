@@ -15,7 +15,7 @@ void checkExit(bool &);
 void updateScreen(bool &, vector<Resource*>&, vector<Request*>&);
 
 // variables
-int resNum = 5;
+int resNum = 9;
 
 int main()
 {
@@ -30,10 +30,8 @@ int main()
     std::thread threadExit(checkExit, std::ref(running));
     std::thread threadScreen(updateScreen, ref(running), ref(server->getResources()), ref(server->getRequests()));
     //
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(555));
     
-    server->spawnRequest();
-    server->spawnRequest();
     server->spawnRequest();
     server->spawnRequest();
     server->spawnRequest();
@@ -44,7 +42,7 @@ int main()
     threadScreen.join();
 
     // clear memory
-    // TODO    
+    server->kill();
     
     // quit ncurses
     endwin();
@@ -72,20 +70,16 @@ void updateScreen(bool &running, vector<Resource*>& pRes, vector<Request*>& pReq
         // print resources rectangles
         for (int i = 0; i < resNum; i++)
         {
-            pRes[i]->lock();
             pRes[i]->draw();
-            pRes[i]->unlock();
         }
 
         for (int i = 0; i < (int)pReq.size(); i++)
         {
-            pReq[i]->lock();
             pReq[i]->draw(i);
-            pReq[i]->unlock();
         }
         
         refresh();
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(29));
         clear();
     }
     clear();

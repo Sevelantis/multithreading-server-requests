@@ -1,8 +1,6 @@
 #ifndef P2_REQUEST_H
 #define P2_REQUEST_H
 
-#define CLOCK_RATE 30000
-
 #include <thread>
 #include <vector>
 #include <string>
@@ -20,11 +18,14 @@ public:
 
     int getColor();
     int getId();
-    int getYRow();
     bool isFinished();
     void setFinished(bool finished);
+    void finishTask(std::pair<Resource*, int> *pair, int i);
+    void finishAllTasks();
 
     std::vector<std::string> getInfo();
+
+    
 public:
     void lock();
     void unlock();
@@ -42,7 +43,8 @@ private:
     std::vector<int> timesElapsed;
     int color;
     int yRow;
-    std::mutex displayMtx;
+    std::mutex mtxMain;
+    std::mutex mtxTime;
 private:
     int clockRate=CLOCK_RATE;
     int timeTotal; // 1000-5000ms
@@ -50,8 +52,6 @@ private:
     bool finished=false;
 private:
     void tryEating(std::pair<Resource*, int> *pair, int i);
-    void finishTask(std::pair<Resource*, int> *pair, int i);
-    void removeTask(int i);
     bool areAllTasksFinished();
 
     void run();

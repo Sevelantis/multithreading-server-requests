@@ -54,6 +54,7 @@
         "request.h": "c",
         "randomgenerator.h": "c",
         "colors.h": "c",
-        "constants.h": "c"
+        "constants.h": "c",
+        "resource.h": "c"
     }
 }

@@ -7,7 +7,7 @@
 
 struct RandomGenerator
 {
-    static const int max = 100000;
+    static const int max = 1000000;
 
     double randDouble(int fmin, int fmax)
     {
@@ -20,12 +20,12 @@ struct RandomGenerator
         return rand() % (max - min) + min;
     }
 
-    bool isProbability(double prob)
+    static bool isProbability(double prob)
     {
-        int middle = max * prob;
+        int threshold = max * prob;
         int rnd = rand() % max;
         
-        return (rnd < middle) ? true : false;
+        return (rnd < threshold) ? true : false;
     }
 
     static int randNumOfResources(double probOne, double probTwo, double probThree)

@@ -11,29 +11,38 @@ void Request::run()
 {
     this->acquiredTasks.resize(resNum, false);
     this->finishedTasks.resize(resNum, false);
+    mtxTime.lock();
     this->timesElapsed.resize(resNum, timeTotal);
+    mtxTime.unlock();
     while(alive)
     {
         int i = 0;
         // loop through all tasks
-        for (auto pair : tasks)
+        for (auto task : tasks)
         {
             // try to take the resource
-            while(!acquiredTasks[i] && !finishedTasks[i])
+            if(!acquiredTasks[i] && !finishedTasks[i])
             {
-                pair.first->lock();
-                tryEating(&pair, i);
-                pair.first->unlock();
+                task.first->lock();
+                tryEating(&task, i);
+                task.first->unlock();
             }
+
             // eat resource until its finished
             if(acquiredTasks[i] && !finishedTasks[i])
-                timesElapsed[i]-=clockRate/1000;
-            
-            if(timesElapsed[i] < 0)  // stop eating im full
             {
-                pair.first->lock();
-                finishTask(&pair, i);
-                pair.first->unlock();
+                mtxTime.lock();
+                timesElapsed[i]-=20;
+                mtxTime.unlock();
+            }
+            mtxTime.lock();
+            int time = timesElapsed[i];
+            mtxTime.unlock();
+            if(time < 0)  // stop eating im full
+            {
+                task.first->lock();
+                finishTask(&task, i);
+                task.first->unlock();
                 
                 // check if all tasks are finished
                 if(areAllTasksFinished())
@@ -41,7 +50,6 @@ void Request::run()
                     this->finished = true;
                 }
             }
-
             i++;
             std::this_thread::sleep_for(std::chrono::microseconds(clockRate));
         }
@@ -50,17 +58,37 @@ void Request::run()
 
 void Request::finishTask(std::pair<Resource*, int> *pair, int i)
 {
-    // remove local task // no need 
-    // removeTask(i); // ??
-
     // remove request from global resource
     pair->first->removeRequest(this, pair->second);
 
     // align time
+    mtxTime.lock();
     timesElapsed[i] = 0;
+    mtxTime.unlock();
 
     // gather information
     finishedTasks[i] = true;
+}
+
+void Request::finishAllTasks()
+{
+    int i = 0;
+    mtxMain.lock();
+    for(auto task : tasks)
+    {
+        task.first->lock();
+        task.first->removeRequest(this, task.second);
+        task.first->unlock();
+
+        mtxTime.lock();
+        if(!timesElapsed.empty())
+            timesElapsed[i] = 0;
+        mtxTime.unlock();
+        finishedTasks[i] = true;
+        i++;
+    }
+    this->setFinished(true);
+    mtxMain.unlock();
 }
 
 void Request::tryEating(std::pair<Resource*, int> *pair, int i)
@@ -84,12 +112,6 @@ bool Request::areAllTasksFinished()
     return std::find(finishedTasks.begin(), finishedTasks.end(), false) == finishedTasks.end();
 }
 
-void Request::removeTask(int i)
-{
-    // tasks.erase(tasks.begin() + i);
-    // this->resNum = tasks.size();
-}
-
 Request::Request(int timeTotal, std::vector<std::pair<Resource*,int>>& tasks)
 {
     this->timeTotal = timeTotal;
@@ -97,22 +119,19 @@ Request::Request(int timeTotal, std::vector<std::pair<Resource*,int>>& tasks)
     this->resNum = tasks.size();
     this->color = RandomGenerator::randInt(BLACK_BLUE, BLACK_MAGENTA+1); // <5, 10+1>
     this->id = idCntr++;
-    this->yRow = Rectangle::Y_HEADER_VALUES;
     this->start();
 }
 
 int Request::getColor()
 {
+    // std::lock_guard<std::mutex> guard(mtx);
     return color;
 }
 
-int Request::getYRow()
-{
-    return yRow;
-}
 
 bool Request::isFinished()
 {
+    // std::lock_guard<std::mutex> guard(mtxMain);
     return finished;
 }
 
@@ -126,9 +145,24 @@ void Request::start()
     this->thr = std::thread(&Request::run, this);
 }
 
-int Request::getId()
+Request::~Request()
 {
-    return id;
+    
+}
+
+void Request::lock()
+{
+    mtxMain.lock();
+}
+
+void Request::unlock()
+{
+    mtxMain.unlock();
+}
+
+void Request::draw(int i)
+{
+    Rectangle::drawRequestInfo(this, i);
 }
 
 std::vector<std::string> Request::getInfo()
@@ -140,8 +174,11 @@ std::vector<std::string> Request::getInfo()
 
     for (int i = 0; i < DATA_AMOUNT-1; i++)
     {
+        mtxMain.lock();
         std::string tmp="";
-        if(i < (int)tasks.size())        // resources ids, percentages demands
+        int size = (int)tasks.size();
+        if(size == 0) break;
+        if(i < size)        // resources ids, percentages demands
         {
             int resId = tasks[i].first->getId();
             tmp.append("Resource["+std::to_string(resId)+"]");
@@ -149,44 +186,44 @@ std::vector<std::string> Request::getInfo()
                 tmp.append("[50%]");
             else if(tasks[i].second == FULL)
                 tmp.append("[100%]");
-            info[i+5] = "["+std::to_string(timesElapsed[i])+"ms]";
+
+            int time = -1;
+            mtxTime.lock();
+            if(!timesElapsed.empty())
+                time = timesElapsed[i];
+            mtxTime.unlock();
+
+            if(time == -1)
+                info[i+5] = "[...]";
+            else if(time != 0)
+                info[i+5] = "["+std::to_string(time)+"]";
+            else if(time == 0)
+                info[i+5] = "[FINISHED]";
+            
         }
         else if(i < TASKS_AMOUNT)       // blank resources
         {
-            tmp.append("---");
+            tmp.append("-----");
         }
         else if (i==TASKS_AMOUNT)       // time total
         {
             tmp.append("TimeTotal["+ std::to_string(timeTotal) + "ms]");
         }
         info[i+1] = tmp;
+        mtxMain.unlock();
     }
-
     return info;
-}
-
-Request::~Request()
-{
-    
 }
 
 void Request::kill()
 {
+    mtxMain.lock();
     this->alive = false;
     thr.join();
+    mtxMain.unlock();
 }
 
-void Request::lock()
+int Request::getId()
 {
-    displayMtx.lock();
-}
-
-void Request::unlock()
-{
-    displayMtx.unlock();
-}
-
-void Request::draw(int i)
-{
-    Rectangle::drawRequestInfo(this, i);
+    return id;
 }

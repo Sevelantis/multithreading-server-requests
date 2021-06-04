@@ -8,7 +8,7 @@ int Rectangle::WIDTH = 11;
 int Rectangle::HEIGHT = 5;
 int Rectangle::X_START = 10;
 int Rectangle::Y_START = 1;
-int Rectangle::Y_SPACE = 4;
+int Rectangle::Y_SPACE = 1;
 int Rectangle::Y_HEADER = Y_START;
 int Rectangle::Y_HEADER_VALUES = Y_START + 1;
 
@@ -36,14 +36,17 @@ Rectangle::Rectangle(int x1, int y1)
 
 void Rectangle::draw(Resource *pRes)
 {
+    pRes->lock();
+    int id = pRes->getId();
     // fill rectangle with color if it is being used
     if(pRes->getState() != NONE)   drawRequestOnState(pRes);
+    pRes->unlock();
 
     //print rectangle border
     drawRectBorder(x_1, y_1, x_2, y_2);
 
     //print id
-    drawResourceId(y_1, x_2, pRes->getId());
+    drawResourceId(y_1, x_2, id);
 }
 
 void Rectangle::drawRectBorder(int x1, int y1, int x2, int y2)
@@ -78,6 +81,7 @@ void Rectangle::drawRequestOnState(Resource *pRes)
     int it = 0;
     for(auto req : requests)
     {
+        req->lock();
         int idRequest = req->getId();
         int c = req->getColor();
         
@@ -102,7 +106,7 @@ void Rectangle::drawRequestOnState(Resource *pRes)
             drawRectRequest(x_1, y_1, x_2+1, y_2+1, idRequest);
         }
         attroff(COLOR_PAIR(c));
-        
+        req->unlock();
         it++;
     }
 }
@@ -110,8 +114,9 @@ void Rectangle::drawRequestOnState(Resource *pRes)
 void Rectangle::drawRequestInfo(Request *pReq, int i)
 {
     auto info = pReq->getInfo();
-    int yRow = Y_HEADER+4+i*2;
     int c = pReq->getColor();
+
+    int yRow = Y_HEADER+4+i*3;
     attron(COLOR_PAIR(c));
     mvprintw(yRow, X_HEADER, info[0].c_str());
     mvprintw(yRow, X_HEADER_1, info[1].c_str());
@@ -120,10 +125,20 @@ void Rectangle::drawRequestInfo(Request *pReq, int i)
     mvprintw(yRow, X_HEADER_4, info[4].c_str());
 
     // line under
-    mvprintw(yRow+1, X_HEADER_1, info[5].c_str());
-    mvprintw(yRow+1, X_HEADER_2, info[6].c_str());
-    mvprintw(yRow+1, X_HEADER_3, info[7].c_str());
+    mvprintw(yRow+1, X_HEADER_1+4, info[5].c_str());
+    mvprintw(yRow+1, X_HEADER_2+4, info[6].c_str());
+    mvprintw(yRow+1, X_HEADER_3+4, info[7].c_str());
+    mvprintw(yRow+2, X_HEADER_3+4, info[7].c_str());
     attroff(COLOR_PAIR(c));
+
+    // table like
+    attron(COLOR_PAIR(MAGENTA_BLACK));        
+    mvprintw(yRow+2, X_HEADER,   "_________________");
+    mvprintw(yRow+2, X_HEADER_1, "_________________");
+    mvprintw(yRow+2, X_HEADER_2, "_________________");
+    mvprintw(yRow+2, X_HEADER_3, "_________________");
+    mvprintw(yRow+2, X_HEADER_4, "_________________");
+    attroff(COLOR_PAIR(MAGENTA_BLACK));
 }
 
 void Rectangle::drawRectRequest(int x1, int y1, int x2, int y2, int idRequest)
