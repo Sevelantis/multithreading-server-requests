@@ -14,12 +14,12 @@ void Server::run()
         if(isRequestSpawnReady())
             spawnRequest();
 
-        if(isDropRandomRequest(.0024))
-            dropRandomRequest();
-        
         else if(isDropAllRequests(.0003))
             dropAllRequests();
 
+        else if(isDropRandomRequest(.0024))
+            dropRandomRequest();
+        
         // check if a request finished
         checkIfRequestFinished();
 
@@ -43,7 +43,7 @@ void Server::spawnRequest()
     int time = RandomGenerator::randInt(500, 2000);
 
     // how many resources are needed?
-    // {(1->50%), (2->30%), (3->20%)}
+    // {(1->40%), (2->40%), (3->20%)}
     int resourceDemandNum = RandomGenerator::randNumOfResources(.4, .4, .2);
 
     // which resources are needed?
@@ -59,7 +59,7 @@ void Server::spawnRequest()
         resIds[i] = id;
 
         // does the request need 50% of resource, or 100%? {50% | 100%}->{HALF | FULL}
-        // probabilties: {{HALF -> 25%}, {FULL -> 75%}}
+        // probabilties: {{HALF -> 90%%}, {FULL -> 10}}
         int halfOrFull = RandomGenerator::randHalfOrFull(.9, .1);
 
         // add resource to request 
@@ -67,7 +67,9 @@ void Server::spawnRequest()
     }
 
     Request *req = new Request(time, tasks);
+    // mtxRequests.lock();
     requests.push_back(req);
+    // mtxRequests.unlock();
 
     Rectangle::Y_HEADER_VALUES+=4;
 }
@@ -113,11 +115,13 @@ std::vector<Resource*>& Server::getResources()
 
 std::vector<Request*>& Server::getRequests()
 {
+    // std::lock_guard<std::mutex> guard(mtxRequests);
     return requests;
 }
 
 void Server::checkIfRequestFinished()
 {
+    // std::lock_guard<std::mutex> guard(mtxRequests);
     for(auto req : requests)
     {
         if(req->isFinished())
@@ -147,11 +151,10 @@ bool Server::isDropRandomRequest(double prob)
 void Server::dropRandomRequest()
 {
     int size = requests.size();
-    if(size == 0) return;
 
+    if(size == 0) return;
     int randIdx = RandomGenerator::randInt(0, size);
     requests[randIdx]->finishAllTasks();
-    checkIfRequestFinished();
 }
 
 bool Server::isDropAllRequests(double prob)
@@ -162,11 +165,11 @@ bool Server::isDropAllRequests(double prob)
 void Server::dropAllRequests()
 {
     int size = requests.size();
+
     if(size == 0) return;
 
     for(auto req : requests)
-    {
         req->finishAllTasks();
-    }
+
     requestSpawnTime=-250;
 }

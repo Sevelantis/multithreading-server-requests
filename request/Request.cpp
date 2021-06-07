@@ -9,11 +9,6 @@ int Request::idCntr = 0;
 
 void Request::run()
 {
-    this->acquiredTasks.resize(resNum, false);
-    this->finishedTasks.resize(resNum, false);
-    mtxTime.lock();
-    this->timesElapsed.resize(resNum, timeTotal);
-    mtxTime.unlock();
     while(alive)
     {
         int i = 0;
@@ -119,6 +114,11 @@ Request::Request(int timeTotal, std::vector<std::pair<Resource*,int>>& tasks)
     this->resNum = tasks.size();
     this->color = RandomGenerator::randInt(BLACK_BLUE, BLACK_MAGENTA+1); // <5, 10+1>
     this->id = idCntr++;
+    mtxTime.lock();
+    this->acquiredTasks.resize(resNum, false);
+    this->finishedTasks.resize(resNum, false);
+    this->timesElapsed.resize(resNum, timeTotal);
+    mtxTime.unlock();
     this->start();
 }
 

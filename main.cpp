@@ -60,14 +60,14 @@ void updateScreen(bool &running, vector<Resource*>& pRes, vector<Request*>& pReq
         mvprintw(Rectangle::Y_HEADER, Rectangle::X_HEADER_3, "Resource_3[id][%]");
         mvprintw(Rectangle::Y_HEADER, Rectangle::X_HEADER_4, "TimeTotal[ms]");
         attroff(COLOR_PAIR(GREEN_BLACK));attron(COLOR_PAIR(MAGENTA_BLACK));        
-        mvprintw(Rectangle::Y_HEADER+1, Rectangle::X_HEADER, "_________________");
+        mvprintw(Rectangle::Y_HEADER+1, Rectangle::X_HEADER,   "_________________");
         mvprintw(Rectangle::Y_HEADER+1, Rectangle::X_HEADER_1, "_________________");
         mvprintw(Rectangle::Y_HEADER+1, Rectangle::X_HEADER_2, "_________________");
         mvprintw(Rectangle::Y_HEADER+1, Rectangle::X_HEADER_3, "_________________");
         mvprintw(Rectangle::Y_HEADER+1, Rectangle::X_HEADER_4, "_________________");
         attroff(COLOR_PAIR(MAGENTA_BLACK));
 
-        // print resources rectangles
+        // print resources and requests
         for (int i = 0; i < resNum; i++)
         {
             pRes[i]->draw();
@@ -79,7 +79,7 @@ void updateScreen(bool &running, vector<Resource*>& pRes, vector<Request*>& pReq
         }
         
         refresh();
-        std::this_thread::sleep_for(std::chrono::milliseconds(29));
+        std::this_thread::sleep_for(std::chrono::milliseconds(70));
         clear();
     }
     clear();

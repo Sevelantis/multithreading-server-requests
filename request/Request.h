@@ -22,10 +22,7 @@ public:
     void setFinished(bool finished);
     void finishTask(std::pair<Resource*, int> *pair, int i);
     void finishAllTasks();
-
-    std::vector<std::string> getInfo();
-
-    
+    std::vector<std::string> getInfo();   
 public:
     void lock();
     void unlock();

@@ -37,6 +37,7 @@ private:
 
     bool isDropAllRequests(double prob);
     void dropAllRequests();
+    std::mutex mtxRequests;
 
 private:
     void removeRequest(Request *pReq);

@@ -23,4 +23,4 @@
 #define DATA_AMOUNT 5
 #define TASKS_AMOUNT 3
 
-#define CLOCK_RATE 7500
+#define CLOCK_RATE 15000
