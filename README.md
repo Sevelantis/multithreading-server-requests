@@ -15,4 +15,4 @@ Course: Operating Systems 2
 
 ### example run
 
-![Alt text](/readme-files/program-run.gif?raw=true "program run")
+![Alt text](/readme-files/example.gif?raw=true "program run")
