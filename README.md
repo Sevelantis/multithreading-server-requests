@@ -1,4 +1,4 @@
-# MultiThreading1
+# Multi Threading
 C++ project for educational purposes - multithreading in C++ - server-requests-resources. 
 
 Student: Miron Oskroba
