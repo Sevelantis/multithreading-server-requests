@@ -28,6 +28,6 @@ NOTE::(Please enter full screen mode)
 ./main
 ```
 
-### example run
+### example run 
 
 ![Alt text](/readme-files/example.gif?raw=true "program run")
