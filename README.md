@@ -1,10 +1,6 @@
 # Multi Threading
 C++ project for educational purposes - multithreading in C++ - server-requests-resources. 
 
-Student: Miron Oskroba
-year, semester: III, 6
-Course: Operating Systems 2
-
 ## Project environment settings
 - Linux Ubuntu 20.04
 - VS Code with a bunch of handy extensions
