@@ -1,5 +1,5 @@
 # Multi Threading
-C++ project for educational purposes - multithreading in C++ - server-requests-resources. 
+C++ project for educational purposes - multithreading using C++ - server-requests-resources. 
 
 ## Project environment settings
 - Linux Ubuntu 20.04
